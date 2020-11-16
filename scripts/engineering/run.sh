@@ -21,10 +21,10 @@ exit_on_error() {
 if [ -z "${HMPPS_BUILD_WORK_DIR}" ]
 then
     echo "--> Using default workdir"
-    env_config_dir="${HOME}/data/env_configs"
+    env_config_dir="${HOME}/data/${ENV_CONFIG_DIR:-env_configs}"
 else
     echo "USING CUSTOM WORKDIR for configs: $HMPPS_BUILD_WORK_DIR"
-    env_config_dir="${HMPPS_BUILD_WORK_DIR}/env_configs"
+    env_config_dir="${HMPPS_BUILD_WORK_DIR}/${ENV_CONFIG_DIR:-env_configs}"
 fi
 
 ENVIRONMENT_NAME_ARG=$1
@@ -95,9 +95,9 @@ case ${ACTION_TYPE} in
     ;;
   docker-plan)
     echo "Running docker plan action"
-    rm -rf .terraform *.plan
-    terragrunt init
-    exit_on_error $? !!
+    # rm -rf .terraform *.plan
+    # terragrunt init
+    # exit_on_error $? !!
     terragrunt plan -detailed-exitcode --out ${ENVIRONMENT_NAME_ARG}.plan || export tf_exit_code="$?"
     if [ -z ${tf_exit_code} ]
     then
