@@ -7,8 +7,10 @@ get_configs:
 	mv hmpps-engineering-platform-terraform/env_configs env_configs
 	rm -rf hmpps-engineering-platform-terraform
 
-terraform: 
+terraform_plan: 
 	sh run.sh $(ENVIRONMENT_NAME) plan $(component)
+
+terraform_apply: terraform_plan
 	sh run.sh $(ENVIRONMENT_NAME) apply $(component)
 
 ansible:
