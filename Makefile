@@ -2,10 +2,16 @@ default: build
 .PHONY: build
 
 terraform_plan:
-	sh run.sh $(ENVIRONMENT_NAME) plan $(component)
+	sh run.sh $(ENVIRONMENT_NAME) plan $(component) || (exit $$?)
+	sh run.sh $(ENVIRONMENT_NAME) upload $(component) || (exit $$?)
 
 terraform_apply:
-	sh run.sh $(ENVIRONMENT_NAME) apply $(component)
+	sh run.sh $(ENVIRONMENT_NAME) download $(component) || (exit $$?)
+	sh run.sh $(ENVIRONMENT_NAME) apply $(component) || (exit $$?)
+
+apply:
+	sh run.sh $(ENVIRONMENT_NAME) plan $(component) || (exit $$?)
+	sh run.sh $(ENVIRONMENT_NAME) apply $(component) || (exit $$?)
 
 ansible:
 	sh run.sh $(ENVIRONMENT_NAME) ansible $(component)
@@ -30,3 +36,4 @@ get_package:
 	aws s3 cp --only-show-errors s3://$(ARTEFACTS_BUCKET)/$(RELEASE_PKGS_PATH)/$(PACKAGE_VERSION)/$(PACKAGE_NAME) $(PACKAGE_NAME)
 	tar xf $(PACKAGE_NAME) --strip-components=1
 	cat output.txt
+

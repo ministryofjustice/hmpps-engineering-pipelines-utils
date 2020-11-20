@@ -12,6 +12,9 @@ TARGET_ACCOUNT=$1
 ACTION_TYPE=$2
 COMPONENT=${3}
 
+OUTPUT_DIR="tfplan"
+S3_RUN_CACHE_DIR="cache/alfresco/${TARGET_ACCOUNT}/${COMPONENT}/${CODEBUILD_RESOLVED_SOURCE_VERSION}"
+
 if [ -z "${HMPPS_BUILD_WORK_DIR}" ]
 then
     echo "--> Using default workdir"
@@ -40,11 +43,11 @@ fi
 
 echo "Output -> environment_name set to: ${TARGET_ACCOUNT}"
 
-#check env vars for RUNNING_IN_CONTAINER switch
+# check env vars for RUNNING_IN_CONTAINER switch
 if [[ ${RUNNING_IN_CONTAINER:-False} == True ]]
 then
     mkdir -p /home/tools/data/lambda
-    workDirContainer=${3}
+    workDirContainer=${COMPONENT}
     echo "Output -> environment stage"
     source ${ENV_CONFIG_DIR}/${TARGET_ACCOUNT}.properties
     echo "Output ---> set environment stage complete"
@@ -53,6 +56,7 @@ then
     export workDir=${workDirContainer}
     cd ${workDir}
     export PLAN_RET_FILE=${HOME}/data/${workDirContainer}_plan_ret
+    mkdir -p ${OUTPUT_DIR}
     echo "Output -> Container workDir: ${workDir}"
 fi
 
@@ -79,17 +83,27 @@ case ${ACTION_TYPE} in
     echo "Running docker plan action"
     rm -rf .terraform *.plan
     terragrunt init
-    terragrunt plan -detailed-exitcode --out ${COMPONENT}.plan || tf_exitcode="$?" ;\
+    terragrunt plan -detailed-exitcode --out ${OUTPUT_DIR}/tf.plan || tf_exitcode="$?" ;\
       if [ "$tf_exitcode" == '1' ]; then exit 1; else exit 0; fi
+    ;;
+  docker-upload)
+    echo "Uploading tf output files"
+    tar cf output.tar .terraform ${OUTPUT_DIR}/tf.plan || exit $?
+    aws s3 cp --only-show-errors output.tar s3://${BUILDS_CACHE_BUCKET}/${S3_RUN_CACHE_DIR}/output.tar || exit $?
+    ;;
+  docker-download)
+    echo "Dwonloading tf output files"
+    aws s3 cp --only-show-errors s3://${BUILDS_CACHE_BUCKET}/${S3_RUN_CACHE_DIR}/output.tar output.tar || exit $?
+    tar xf output.tar .terraform ${OUTPUT_DIR}/ || exit $?
     ;;
   docker-apply)
     echo "Running docker apply action"
-    terragrunt apply ${COMPONENT}.plan || export tf_exit_code="$?"; \
-      if [ "$tf_exitcode" -ne 0 ]; then exit $tf_exitcode; else exit 0; fi
+    terragrunt apply ${OUTPUT_DIR}/tf.plan || tf_exit_code="$?"; \
+      if [ "$tf_exitcode" != 0 ]; then exit $tf_exitcode; else exit 0; fi
     ;;
   docker-destroy)
     echo "Running docker destroy action"
-    rm -rf .terraform *.plan
+    rm -rf .terraform ${OUTPUT_DIR}*.plan
     terragrunt init
     terragrunt destroy -force
     ;;
@@ -126,6 +140,7 @@ case ${ACTION_TYPE} in
     ;;
   *)
     echo "${ACTION_TYPE} is not a valid argument. init - apply - test - output - destroy"
+    exit 1
   ;;
 esac
 
