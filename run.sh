@@ -13,7 +13,7 @@ ACTION_TYPE=$2
 COMPONENT=${3}
 
 OUTPUT_DIR="tfplan"
-S3_RUN_CACHE_DIR="cache/alfresco/${TARGET_ACCOUNT}/${COMPONENT}/${CODEBUILD_RESOLVED_SOURCE_VERSION}"
+S3_RUN_CACHE_DIR="cache/${TARGET_ACCOUNT}/${COMPONENT}/${CODEBUILD_RESOLVED_SOURCE_VERSION}"
 
 if [ -z "${HMPPS_BUILD_WORK_DIR}" ]
 then
@@ -79,6 +79,10 @@ case ${ACTION_TYPE} in
     echo "Running ansible playbook action"
     ansible-playbook playbook.yml
     ;;
+  docker-configs)
+    echo "Running ansible playbook action"
+    ansible-playbook playbook.yml
+    ;;
   docker-plan)
     echo "Running docker plan action"
     rm -rf .terraform *.plan
@@ -87,14 +91,15 @@ case ${ACTION_TYPE} in
       if [ "$tf_exitcode" == '1' ]; then exit 1; else exit 0; fi
     ;;
   docker-upload)
-    echo "Uploading tf output files"
+    echo "Uploading tf output files to bucket s3://${BUILDS_CACHE_BUCKET}/${CODEBUILD_INITIATOR}/${COMPONENT}"
     tar cf output.tar .terraform ${OUTPUT_DIR}/tf.plan || exit $?
-    aws s3 cp --only-show-errors output.tar s3://${BUILDS_CACHE_BUCKET}/${S3_RUN_CACHE_DIR}/output.tar || exit $?
+    aws s3 cp --only-show-errors output.tar s3://${BUILDS_CACHE_BUCKET}/${CODEBUILD_INITIATOR}/${COMPONENT}/output.tar || exit $?
     ;;
   docker-download)
-    echo "Dwonloading tf output files"
-    aws s3 cp --only-show-errors s3://${BUILDS_CACHE_BUCKET}/${S3_RUN_CACHE_DIR}/output.tar output.tar || exit $?
-    tar xf output.tar .terraform ${OUTPUT_DIR}/ || exit $?
+    echo "Downloading tf output files from bucket s3://${BUILDS_CACHE_BUCKET}/${CODEBUILD_INITIATOR}/${COMPONENT}"
+    aws s3 cp --only-show-errors s3://${BUILDS_CACHE_BUCKET}/${CODEBUILD_INITIATOR}/${COMPONENT}/output.tar output.tar || exit $?
+    ls
+    tar xf output.tar || exit $?
     ;;
   docker-apply)
     echo "Running docker apply action"

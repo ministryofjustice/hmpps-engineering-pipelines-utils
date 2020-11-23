@@ -8,6 +8,7 @@ terraform_plan:
 terraform_apply:
 	sh run.sh $(ENVIRONMENT_NAME) download $(component) || (exit $$?)
 	sh run.sh $(ENVIRONMENT_NAME) apply $(component) || (exit $$?)
+	aws s3 rm --only-show-errors --recursive s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/$(component)
 
 apply:
 	sh run.sh $(ENVIRONMENT_NAME) plan $(component) || (exit $$?)
@@ -17,14 +18,14 @@ ansible:
 	sh run.sh $(ENVIRONMENT_NAME) ansible $(component)
 
 lambda_packages:
-	rm -rf $(component)
-	mkdir $(component)
-	aws s3 sync --only-show-errors s3://$(ARTEFACTS_BUCKET)/lambda/eng-lambda-functions-builder/latest/ $(CODEBUILD_SRC_DIR)/$(component)/
+	rm -rf functions
+	mkdir functions
+	aws s3 sync --only-show-errors s3://$(ARTEFACTS_BUCKET)/lambda/eng-lambda-functions-builder/latest/ $(CODEBUILD_SRC_DIR)/functions/ || (exit $$?)
 
 get_configs:
 	rm -rf env_configs
 	git config --global advice.detachedHead false
-	git clone -b $(ENV_CONFIGS_VERSION) $(ENV_CONFIGS_REPO) env_configs
+	git clone -b $(ENV_CONFIGS_VERSION) $(ENV_CONFIGS_REPO) env_configs || (exit $$?)
 
 get_eng_configs:
 	rm -rf env_configs hmpps-engineering-platform-terraform
@@ -37,3 +38,17 @@ get_package:
 	tar xf $(PACKAGE_NAME) --strip-components=1
 	cat output.txt
 
+build_tfpackage: get_configs lambda_packages
+	mkdir /tmp/builds
+	rm -rf /tmp/tfpackage.tar
+	aws s3 sync --only-show-errors $(CODEBUILD_SRC_DIR)/ s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/code/ || exit $?
+	aws s3 sync --only-show-errors env_configs/ s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/code/env_configs/ || exit $?
+	aws s3 sync --only-show-errors functions/ s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/code/functions/ || exit $?
+	aws s3 sync --only-show-errors s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/code/ /tmp/builds/ || exit $?
+	tar cf /tmp/tfpackage.tar /tmp/builds || exit $?
+	aws s3 cp --only-show-errors /tmp/tfpackage.tar s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/tfpackage.tar || exit $?
+	aws s3 rm --only-show-errors --recursive s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/code
+	
+get_tfpackage:
+	aws s3 cp --only-show-errors s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/tfpackage.tar /tmp/tfpackage.tar || exit $?
+	tar xf /tmp/tfpackage.tar -C $(CODEBUILD_SRC_DIR) --strip-components=2 || exit $?
