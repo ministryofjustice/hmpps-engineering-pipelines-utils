@@ -1,5 +1,5 @@
-default: build
-.PHONY: build
+default: build_tfpackage
+.PHONY: build_tfpackage
 
 terraform_plan:
 	sh run.sh $(ENVIRONMENT_NAME) plan $(component) || (exit $$?)
@@ -8,6 +8,8 @@ terraform_plan:
 terraform_apply:
 	sh run.sh $(ENVIRONMENT_NAME) download $(component) || (exit $$?)
 	sh run.sh $(ENVIRONMENT_NAME) apply $(component) || (exit $$?)
+
+cleanup:
 	aws s3 rm --only-show-errors --recursive s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/$(component)
 
 apply:

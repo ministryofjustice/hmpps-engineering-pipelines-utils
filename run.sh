@@ -79,10 +79,6 @@ case ${ACTION_TYPE} in
     echo "Running ansible playbook action"
     ansible-playbook playbook.yml
     ;;
-  docker-configs)
-    echo "Running ansible playbook action"
-    ansible-playbook playbook.yml
-    ;;
   docker-plan)
     echo "Running docker plan action"
     rm -rf .terraform *.plan
@@ -92,13 +88,12 @@ case ${ACTION_TYPE} in
     ;;
   docker-upload)
     echo "Uploading tf output files to bucket s3://${BUILDS_CACHE_BUCKET}/${CODEBUILD_INITIATOR}/${COMPONENT}"
-    tar cf output.tar .terraform ${OUTPUT_DIR}/tf.plan || exit $?
+    tar cf output.tar ${OUTPUT_DIR}/tf.plan || exit $?
     aws s3 cp --only-show-errors output.tar s3://${BUILDS_CACHE_BUCKET}/${CODEBUILD_INITIATOR}/${COMPONENT}/output.tar || exit $?
     ;;
   docker-download)
     echo "Downloading tf output files from bucket s3://${BUILDS_CACHE_BUCKET}/${CODEBUILD_INITIATOR}/${COMPONENT}"
     aws s3 cp --only-show-errors s3://${BUILDS_CACHE_BUCKET}/${CODEBUILD_INITIATOR}/${COMPONENT}/output.tar output.tar || exit $?
-    ls
     tar xf output.tar || exit $?
     ;;
   docker-apply)
