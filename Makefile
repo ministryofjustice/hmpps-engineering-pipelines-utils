@@ -48,6 +48,7 @@ build_tfpackage: get_configs lambda_packages
 	tar cf /tmp/tfpackage.tar /tmp/builds || exit $?
 	aws s3 cp --only-show-errors /tmp/tfpackage.tar s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/tfpackage.tar || exit $?
 	aws s3 rm --only-show-errors --recursive s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/code
+	cp /tmp/tfpackage.tar $(CODEBUILD_SRC_DIR)/tfpackage.tar 
 	
 get_tfpackage:
 	aws s3 cp --only-show-errors s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/tfpackage.tar /tmp/tfpackage.tar || exit $?
