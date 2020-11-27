@@ -97,8 +97,7 @@ case ${ACTION_TYPE} in
     ;;
   docker-apply)
     echo "Running docker apply action"
-    terragrunt apply ${OUTPUT_DIR}/tf.plan || tf_exit_code="$?"; \
-      if [ "$tf_exitcode" != 0 ]; then exit $tf_exitcode; else exit 0; fi
+    terragrunt apply ${OUTPUT_DIR}/tf.plan || exit $?
     ;;
   docker-destroy)
     echo "Running docker destroy action"
