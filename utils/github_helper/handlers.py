@@ -59,12 +59,13 @@ def request_handler(request_data: Dict):
         return None
 
 
-def generate_version(version: str):
+def generate_version(version: str, bump_type: str = "patch"):
     """
     Generates a new version using semver  
 
     Parameters:
         version (str): version to parse
+        bump_type = ["major", "minor", "patch"] Default: patch
 
     Returns:
         string: new version number
@@ -72,6 +73,10 @@ def generate_version(version: str):
     try:
         parsed_version = semver.parse_version_info(version)
         new_version = parsed_version.bump_patch()
+        if bump_type == "minor":
+            new_version = parsed_version.bump_minor()
+        if bump_type == "major":
+            new_version = parsed_version.bump_major()
         updated_version = semver.replace(version, patch=new_version.patch)
         return updated_version
     except Exception as err:

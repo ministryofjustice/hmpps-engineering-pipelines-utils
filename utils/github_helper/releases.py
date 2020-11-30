@@ -23,6 +23,21 @@ class Release_Handler(GitHub_Config):
         commit_ids = [id["sha"] for id in response.json()]
         return commit_ids
 
+    def get_commit(self, commit_id: str):
+        try:
+            request_data = {
+                "method": "GET",
+                "headers": self.req_headers,
+                "url": f"{self.repo_url}/git/commits/{commit_id}"
+            }
+            response = request_handler(request_data)
+            return response.json()
+        except Exception as err:
+            print("Error occurred getting tag: {}".format(err))
+            return None
+        else:
+            return None
+
     def get_tag(self, tag_name: str):
         """
         Retrieves information about a tag
@@ -170,10 +185,22 @@ class Release_Handler(GitHub_Config):
         Returns:
             dict: tag details
         """
-        create_new_tag = False
+
         try:
+            commit_message = self.get_commit(commit_id)["message"]
+            create_new_tag = False
+            commit_message = self.get_commit(commit_id)
+            commit_message = commit_message["message"]
+            
             _tag = self.get_latest_tag()
             new_tag = generate_version(_tag)
+
+            if "#MAJOR" in commit_message:
+                new_tag = generate_version(_tag, "major")
+
+            if "#MINOR" in commit_message:
+                new_tag = generate_version(_tag, "minor")
+
             resp_obj = {
                 "message": f"Error occurred creating release version {new_tag} no changes made",
                 "exit_code": 1
@@ -219,7 +246,7 @@ class Release_Handler(GitHub_Config):
             resp_obj['error'] = err
             return resp_obj
 
-        return None
+        return commit_message
 
     def task_handler(self, commit_id: str):
         resp_obj = {

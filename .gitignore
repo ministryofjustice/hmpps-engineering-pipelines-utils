@@ -1,0 +1,5 @@
+config.json
+utils/test.py
+.venv
+**/*.pyc
+**/*__pycache__
