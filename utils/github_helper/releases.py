@@ -105,6 +105,17 @@ class Release_Handler(GitHub_Config):
             return None
 
         return None
+    
+    def get_build_version(self):
+        try:
+            tag = self.get_latest_tag()
+            tag = generate_version(tag)
+            return tag
+        except Exception as err:
+            print("Error occurred getting tag: {}".format(err))
+            return None
+
+        return None
 
     def create_tag_reference(self, payload: dict):
         """
