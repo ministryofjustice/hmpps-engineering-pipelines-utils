@@ -45,16 +45,11 @@ build_tfpackage: get_configs lambda_packages
 	aws s3 sync --only-show-errors env_configs/ s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/code/env_configs/ || exit $?
 	aws s3 sync --only-show-errors functions/ s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/code/functions/ || exit $?
 	aws s3 sync --only-show-errors s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/code/ /tmp/builds/ || exit $?
+	echo "export PACKAGE_VERSION=$(PACKAGE_VERSION)" > /tmp/builds/output.txt
+	echo "export ENV_CONFIGS_VERSION=$(ENV_CONFIGS_VERSION)" >> /tmp/builds/output.txt
 	tar cf /tmp/$(PACKAGE_NAME) /tmp/builds || exit $?
 	aws s3 cp --only-show-errors /tmp/$(PACKAGE_NAME) s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/$(PACKAGE_NAME) || exit $?
+	aws s3 cp --only-show-errors /tmp/$(PACKAGE_NAME) s3://$(ARTEFACTS_BUCKET)/$(RELEASE_PKGS_PATH)/$(PACKAGE_VERSION)/$(PACKAGE_NAME)
 	aws s3 rm --only-show-errors --recursive s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/code
 	cp /tmp/$(PACKAGE_NAME) $(CODEBUILD_SRC_DIR)/$(PACKAGE_NAME) 
 
-build_artefact:
-	mkdir /tmp/builds
-	rm -rf /tmp/$(PACKAGE_NAME) $(CODEBUILD_SRC_DIR)/$(COMPONENT)/.terraform
-	aws s3 sync --only-show-errors $(CODEBUILD_SRC_DIR)/ s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/$(COMPONENT)/code/ || exit $?
-	aws s3 sync --only-show-errors s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/$(COMPONENT)/code/ /tmp/builds/ || exit $?
-	tar cf /tmp/$(PACKAGE_NAME) /tmp/builds || exit $?
-	cp /tmp/$(PACKAGE_NAME) $(CODEBUILD_SRC_DIR)/$(PACKAGE_NAME)
-	aws s3 rm --only-show-errors --recursive s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/$(COMPONENT)/code/
