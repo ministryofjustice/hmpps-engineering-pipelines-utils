@@ -34,7 +34,7 @@ get_eng_configs:
 	rm -rf hmpps-engineering-platform-terraform
 
 get_package:
-	aws s3 cp --only-show-errors s3://$(ARTEFACTS_BUCKET)/$(RELEASE_PKGS_PATH)/$(PACKAGE_VERSION)/$(PACKAGE_NAME) $(PACKAGE_NAME)
+	aws s3 cp --only-show-errors s3://$(ARTEFACTS_BUCKET)/$(RELEASE_PKGS_PATH)/$(CODEBUILD_INITIATOR)/$(PACKAGE_VERSION)/$(PACKAGE_NAME) $(PACKAGE_NAME)
 	tar xf $(PACKAGE_NAME) --strip-components=1
 	cat output.txt
 
@@ -50,7 +50,8 @@ build_tfpackage: get_configs lambda_packages
 	cat /tmp/builds/output.txt
 	tar cf /tmp/$(PACKAGE_NAME) /tmp/builds || exit $?
 	aws s3 cp --only-show-errors /tmp/$(PACKAGE_NAME) s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/$(PACKAGE_NAME) || exit $?
-	aws s3 cp --only-show-errors /tmp/$(PACKAGE_NAME) s3://$(ARTEFACTS_BUCKET)/$(RELEASE_PKGS_PATH)/$(PACKAGE_VERSION)/$(PACKAGE_NAME)
+	aws s3 cp --only-show-errors /tmp/$(PACKAGE_NAME) s3://$(ARTEFACTS_BUCKET)/$(RELEASE_PKGS_PATH)/$(CODEBUILD_INITIATOR)/latest/$(PACKAGE_NAME)
+	aws s3 cp --only-show-errors /tmp/$(PACKAGE_NAME) s3://$(ARTEFACTS_BUCKET)/$(RELEASE_PKGS_PATH)/$(CODEBUILD_INITIATOR)/$(PACKAGE_VERSION)/$(PACKAGE_NAME)
 	aws s3 rm --only-show-errors --recursive s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/code
 	cp /tmp/$(PACKAGE_NAME) $(CODEBUILD_SRC_DIR)/$(PACKAGE_NAME) 
 
