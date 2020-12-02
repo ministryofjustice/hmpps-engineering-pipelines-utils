@@ -35,8 +35,6 @@ get_eng_configs:
 
 get_package:
 	aws s3 cp --only-show-errors s3://$(ARTEFACTS_BUCKET)/$(RELEASE_PKGS_PATH)/$(CODEBUILD_INITIATOR)/$(PACKAGE_VERSION)/$(PACKAGE_NAME) $(PACKAGE_NAME)
-	tar xf $(PACKAGE_NAME) --strip-components=1
-	cat output.txt
 
 build_tfpackage: get_configs lambda_packages
 	mkdir /tmp/builds
