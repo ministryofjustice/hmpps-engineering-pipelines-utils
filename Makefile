@@ -34,7 +34,7 @@ get_eng_configs:
 	rm -rf hmpps-engineering-platform-terraform
 
 get_package:
-	aws s3 cp --only-show-errors s3://$(ARTEFACTS_BUCKET)/$(RELEASE_PKGS_PATH)/$(CODEBUILD_INITIATOR)/$(PACKAGE_VERSION)/$(PACKAGE_NAME) $(PACKAGE_NAME)
+	aws s3 cp --only-show-errors s3://$(ARTEFACTS_BUCKET)/$(RELEASE_PKGS_PATH)/$(DEV_PIPELINE_NAME)/$(PACKAGE_VERSION)/$(PACKAGE_NAME) $(PACKAGE_NAME)
 
 build_tfpackage: get_configs lambda_packages
 	mkdir /tmp/builds
