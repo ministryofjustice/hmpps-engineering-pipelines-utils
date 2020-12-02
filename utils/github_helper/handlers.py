@@ -77,7 +77,7 @@ def generate_version(version: str, bump_type: str = "patch"):
             new_version = parsed_version.bump_minor()
         if bump_type == "major":
             new_version = parsed_version.bump_major()
-        updated_version = semver.replace(version, patch=new_version.patch)
-        return updated_version
+
+        return str(new_version)
     except Exception as err:
         return err
