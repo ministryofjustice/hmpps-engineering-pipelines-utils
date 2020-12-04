@@ -80,7 +80,7 @@ case ${ACTION_TYPE} in
     ;;
   docker-plan)
     echo "Running docker plan action"
-    rm -rf .terraform *.plan
+    rm -rf *.plan
     terragrunt init
     terragrunt plan -detailed-exitcode --out ${OUTPUT_DIR}/tf.plan || tf_exitcode="$?" ;\
       if [ "$tf_exitcode" == '1' ]; then exit 1; else exit 0; fi
