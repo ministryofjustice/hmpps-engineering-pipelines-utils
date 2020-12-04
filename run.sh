@@ -101,7 +101,7 @@ case ${ACTION_TYPE} in
     ;;
   docker-destroy)
     echo "Running docker destroy action"
-    rm -rf .terraform ${OUTPUT_DIR}*.plan
+    rm -rf ${OUTPUT_DIR}*.plan
     terragrunt init
     terragrunt destroy -force
     ;;
