@@ -84,9 +84,14 @@ case ${ACTION_TYPE} in
     terragrunt init
     terragrunt plan -detailed-exitcode --out ${OUTPUT_DIR}/tf.plan || tf_exitcode="$?" ;\
       if [ "$tf_exitcode" == '1' ] 
-      then 
+      then
         exit 1
+      elif [ "$tf_exitcode" == '2' ]
+      then
+        echo "TERRAFORM PLAN HAS FOUND SOME CHANGES"
+        exit 0
       else
+        echo "TERRAFORM PLAN DOES NOT HAVE ANY CHANGES"
         exit 0
       fi
     ;;
