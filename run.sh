@@ -83,7 +83,12 @@ case ${ACTION_TYPE} in
     rm -rf *.plan
     terragrunt init
     terragrunt plan -detailed-exitcode --out ${OUTPUT_DIR}/tf.plan || tf_exitcode="$?" ;\
-      if [ "$tf_exitcode" == '1' ]; then exit 1; else exit 0; fi
+      if [ "$tf_exitcode" == '1' ] 
+      then 
+        exit 1
+      else
+        exit 0
+      fi
     ;;
   docker-upload)
     echo "Uploading tf output files to bucket s3://${BUILDS_CACHE_BUCKET}/${CODEBUILD_INITIATOR}/${COMPONENT}"
