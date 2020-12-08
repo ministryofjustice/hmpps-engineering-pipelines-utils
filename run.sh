@@ -60,7 +60,7 @@ then
 fi
 
 #Apply overrides if names are too long
-if [ -f "${ENV_CONFIG_DIR}/sub-projects/alfresco.properties" ]; then
+if [ -f "${ENV_CONFIG_DIR}/sub-projects/alfresco.properties" ] && [[ ${ENV_APPLY_OVERIDES:-False} == True ]] ; then
     echo "Applying ENV overrides"
     source ${ENV_CONFIG_DIR}/sub-projects/alfresco.properties;
 fi
