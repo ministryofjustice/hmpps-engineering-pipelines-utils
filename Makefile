@@ -7,6 +7,9 @@ terraform_plan:
 terraform_apply:
 	sh run.sh $(ENVIRONMENT_NAME) apply $(component) || (exit $$?)
 
+terraform_destroy:
+	sh run.sh $(ENVIRONMENT_NAME) destroy $(component) || (exit $$?)
+
 cleanup:
 	aws s3 rm --only-show-errors --recursive s3://$(BUILDS_CACHE_BUCKET)/$(CODEBUILD_INITIATOR)/$(component)
 

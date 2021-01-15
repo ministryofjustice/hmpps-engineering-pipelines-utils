@@ -113,7 +113,7 @@ case ${ACTION_TYPE} in
     echo "Running docker destroy action"
     rm -rf ${OUTPUT_DIR}*.plan
     terragrunt init
-    terragrunt destroy -force
+    terragrunt destroy -auto-approve
     ;;
   docker-test)
     echo "Running docker test action"
