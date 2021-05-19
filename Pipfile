@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 requests = "*"
 semver = "*"
+urllib3 = ">=1.26.4"
 
 [dev-packages]
 pylint = "*"
